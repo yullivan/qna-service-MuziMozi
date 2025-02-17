@@ -37,25 +37,10 @@ public class QnaService {
         Question question = findQuestionById(questionId);
         Answers answerList = new Answers(answerRepository.findByQuestionIdAndDeletedFalse(questionId));
 
-        hasDeleteAnswerPermission(loginUser, answerList);
-        hasDeleteQuestionPermission(loginUser, question);
+        validateDeletePermission(loginUser, question, answerList);
+        deleteAll(question, answerList);
 
-        List<DeleteHistory> deleteHistories = new ArrayList<>();
-
-        answerList.delete();
-        deleteHistories.addAll(answerList
-                                .getAnswers()
-                                .stream()
-                                .map(answer -> new DeleteHistory(
-                                                    ContentType.ANSWER,
-                                                    answer.getId(),
-                                                    answer.getWriter(),
-                                                    LocalDateTime.now()))
-                                .toList());
-
-        question.delete();
-        deleteHistories.add(new DeleteHistory(ContentType.QUESTION, question.getId(), question.getWriter(), LocalDateTime.now()));
-
+        List<DeleteHistory> deleteHistories = createDeleteHistories(question, answerList);
         deleteHistoryService.saveAll(deleteHistories);
     }
 
@@ -71,5 +56,38 @@ public class QnaService {
         if (!question.isOwner(loginUser)) {
             throw new CannotDeleteException("질문을 삭제할 권한이 없습니다.");
         }
+    }
+
+    private void validateDeletePermission(User loginUser, Question question, Answers answerList) {
+        hasDeleteAnswerPermission(loginUser, answerList);
+        hasDeleteQuestionPermission(loginUser, question);
+    }
+
+    private void deleteAll(Question question, Answers answerList) {
+        answerList.delete();
+        question.delete();
+    }
+
+    private List<DeleteHistory> createDeleteHistories(Question question, Answers answerList) {
+        List<DeleteHistory> deleteHistories = new ArrayList<>();
+
+        deleteHistories.addAll(
+                answerList.getAnswers().stream()
+                        .map(answer -> new DeleteHistory(
+                                ContentType.ANSWER,
+                                answer.getId(),
+                                answer.getWriter(),
+                                LocalDateTime.now()))
+                        .toList()
+        );
+
+        deleteHistories.add(new DeleteHistory(
+                ContentType.QUESTION,
+                question.getId(),
+                question.getWriter(),
+                LocalDateTime.now()
+        ));
+
+        return deleteHistories;
     }
 }
