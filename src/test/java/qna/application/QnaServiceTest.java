@@ -23,8 +23,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class QnaServiceTest {
@@ -100,5 +99,34 @@ class QnaServiceTest {
                 new DeleteHistory(ContentType.QUESTION, question.getId(), question.getWriter(), LocalDateTime.now())
         );
         verify(deleteHistoryService).saveAll(deleteHistories);
+    }
+
+    @Test
+    void deleteQuestion_삭제이력_정상생성() {
+        // given
+        when(questionRepository.findByIdAndDeletedFalse(question.getId())).thenReturn(java.util.Optional.of(question));
+        when(answerRepository.findByQuestionIdAndDeletedFalse(question.getId())).thenReturn(Arrays.asList(answer));
+
+        // when
+        qnaService.deleteQuestion(UserTest.DORAEMON, question.getId());
+
+        // then
+        verify(deleteHistoryService, times(1)).saveAll(argThat(histories -> {
+            // 삭제 이력이 올바르게 생성되었는지 검증
+            assertThat(histories).hasSize(2);
+            assertThat(histories)
+                    .extracting(DeleteHistory::getContentType)
+                    .containsExactlyInAnyOrder(ContentType.QUESTION, ContentType.ANSWER);
+
+            assertThat(histories)
+                    .extracting(DeleteHistory::getDeletedUser)
+                    .containsOnly(UserTest.DORAEMON);
+
+            assertThat(histories)
+                    .extracting(DeleteHistory::getCreateDate)
+                    .allMatch(date -> date.isBefore(LocalDateTime.now()));
+
+            return true;
+        }));
     }
 }
