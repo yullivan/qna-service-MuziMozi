@@ -40,6 +40,26 @@ public class Question extends BaseEntity{
         return this;
     }
 
+    public List<DeleteHistory> delete(User loginUser, List<Answer> answers) {
+
+        List<DeleteHistory> deleteHistoryList = new ArrayList<>();
+
+        if (!this.isOwner(loginUser)) {
+            throw new CannotDeleteException("질문을 삭제할 권한이 없습니다.");
+        }
+
+        for (Answer answer : answers) {
+            if (!answer.isOwner(loginUser)) {
+                throw new CannotDeleteException("다른 사람이 쓴 답변이 있어 삭제할 수 없습니다.");
+            }
+            deleteHistoryList.add(answer.delete()); // 만약 삭제 도중 다른 유저의 답변이 있을 경우 @Transactional에 의해 기존 삭제 처리가 롤백됨
+        }
+        this.setDeleted(true);
+        deleteHistoryList.add(new DeleteHistory(ContentType.QUESTION, this.id, this.getWriter(), LocalDateTime.now()));
+
+        return deleteHistoryList;
+    }
+
     public boolean isOwner(User writer) {
         return this.writer.equals(writer);
     }
