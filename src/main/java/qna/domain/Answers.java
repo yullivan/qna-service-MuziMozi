@@ -18,8 +18,10 @@ public class Answers {
         return answers;
     }
 
-    public List<DeleteHistory> delete() {
-        return this.answers.stream().map(answer -> answer.delete()).toList();
+    public void delete() {
+        if (answers == null || answers.isEmpty()) return;
+        for (Answer answer : answers) {
+            answer.delete();
+        }
     }
-
 }

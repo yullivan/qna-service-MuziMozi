@@ -43,17 +43,16 @@ public class Question extends BaseEntity{
         return this;
     }
 
-    public DeleteHistory delete() {
+    public void delete() {
 
         if (hasAnswers()) {
             throw new CannotDeleteException("질문에 답변이 남아있습니다.");
         }
         this.setDeleted(true);
-        return new DeleteHistory(ContentType.QUESTION, this.id, this.getWriter(), LocalDateTime.now());
     }
 
     private boolean hasAnswers() {
-        return !(this.answerList == null);
+        return this.answerList != null && !this.answerList.isEmpty();
     }
 
     public boolean isOwner(User writer) {
