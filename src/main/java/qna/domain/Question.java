@@ -25,7 +25,7 @@ public class Question extends BaseEntity{
     @Column(nullable = false)
     private boolean deleted = false;
 
-    @OneToMany
+    @OneToMany(mappedBy = "question")
     private List<Answer> answerList;
 
     public Question(String title, String contents) {

@@ -54,7 +54,6 @@ public class Answer extends BaseEntity{
     }
 
     public void delete() {
-
         this.setDeleted(true);
     }
 
