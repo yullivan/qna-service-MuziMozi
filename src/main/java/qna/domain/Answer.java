@@ -58,6 +58,10 @@ public class Answer extends BaseEntity{
         this.setDeleted(true);
     }
 
+    public DeleteHistory createDeleteHistory(User deleteUser) {
+        return new DeleteHistory(ContentType.ANSWER, this.id, deleteUser);
+    }
+
     public Long getId() {
         return id;
     }

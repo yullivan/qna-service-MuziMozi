@@ -51,6 +51,10 @@ public class Question extends BaseEntity{
         this.setDeleted(true);
     }
 
+    public DeleteHistory createDeleteHistory(User deleteUser) {
+        return new DeleteHistory(ContentType.QUESTION, this.id, deleteUser);
+    }
+
     private boolean hasAnswers() {
         return this.answerList != null && !this.answerList.isEmpty();
     }

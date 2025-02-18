@@ -3,6 +3,7 @@ package qna.domain;
 import jakarta.persistence.Embeddable;
 import qna.exception.CannotDeleteException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Embeddable
@@ -23,5 +24,11 @@ public class Answers {
         for (Answer answer : answers) {
             answer.delete();
         }
+    }
+
+    public List<DeleteHistory> createDeleteHistories(User deleteUser) {
+        return this.answers.stream()
+                .map(answer -> answer.createDeleteHistory(deleteUser))
+                .toList();
     }
 }
