@@ -22,11 +22,11 @@ public class DeleteHistory {
     @Column(nullable = false)
     private LocalDateTime createDate = LocalDateTime.now();
 
-    public DeleteHistory(ContentType contentType, Long contentId, User deletedUser, LocalDateTime createDate) {
+    public DeleteHistory(ContentType contentType, Long contentId, User deletedUser) {
         this.contentType = contentType;
         this.contentId = contentId;
         this.deletedUser = deletedUser;
-        this.createDate = createDate;
+        this.createDate = LocalDateTime.now();
     }
 
     public Long getId() {
