@@ -40,7 +40,7 @@ public class QnaService {
         validateDeletePermission(loginUser, question, answerList);
         deleteAll(question, answerList);
 
-        List<DeleteHistory> deleteHistories = createDeleteHistories(question, answerList);
+        List<DeleteHistory> deleteHistories = createDeleteHistories(loginUser, question, answerList);
         deleteHistoryService.saveAll(deleteHistories);
     }
 
@@ -68,25 +68,10 @@ public class QnaService {
         question.delete();
     }
 
-    private List<DeleteHistory> createDeleteHistories(Question question, Answers answerList) {
+    private List<DeleteHistory> createDeleteHistories(User deleteUser, Question question, Answers answerList) {
         List<DeleteHistory> deleteHistories = new ArrayList<>();
-
-        deleteHistories.addAll(
-                answerList.getAnswers().stream()
-                        .map(answer -> new DeleteHistory(
-                                ContentType.ANSWER,
-                                answer.getId(),
-                                answer.getWriter(),
-                                LocalDateTime.now()))
-                        .toList()
-        );
-
-        deleteHistories.add(new DeleteHistory(
-                ContentType.QUESTION,
-                question.getId(),
-                question.getWriter(),
-                LocalDateTime.now()
-        ));
+        deleteHistories.addAll(answerList.createDeleteHistories(deleteUser));
+        deleteHistories.add(question.createDeleteHistory(deleteUser));
 
         return deleteHistories;
     }
