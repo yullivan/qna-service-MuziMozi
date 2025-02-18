@@ -4,12 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import qna.application.util.DeleteUtils;
 import qna.domain.*;
 import qna.exception.CannotDeleteException;
 import qna.exception.NotFoundException;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -37,42 +36,7 @@ public class QnaService {
         Question question = findQuestionById(questionId);
         Answers answerList = new Answers(answerRepository.findByQuestionIdAndDeletedFalse(questionId));
 
-        validateDeletePermission(loginUser, question, answerList);
-        deleteAll(question, answerList);
-
-        List<DeleteHistory> deleteHistories = createDeleteHistories(loginUser, question, answerList);
+        List<DeleteHistory> deleteHistories = DeleteUtils.deleteQuestion(loginUser, question, answerList);
         deleteHistoryService.saveAll(deleteHistories);
-    }
-
-    private void hasDeleteAnswerPermission(User loginUser, Answers answerList) {
-        for (Answer answer : answerList.getAnswers()) {
-            if (!answer.isOwner(loginUser)) {
-                throw new CannotDeleteException("다른 사람이 쓴 답변이 있어 삭제할 수 없습니다.");
-            }
-        }
-    }
-
-    private void hasDeleteQuestionPermission(User loginUser, Question question) {
-        if (!question.isOwner(loginUser)) {
-            throw new CannotDeleteException("질문을 삭제할 권한이 없습니다.");
-        }
-    }
-
-    private void validateDeletePermission(User loginUser, Question question, Answers answerList) {
-        hasDeleteAnswerPermission(loginUser, answerList);
-        hasDeleteQuestionPermission(loginUser, question);
-    }
-
-    private void deleteAll(Question question, Answers answerList) {
-        answerList.delete();
-        question.delete();
-    }
-
-    private List<DeleteHistory> createDeleteHistories(User deleteUser, Question question, Answers answerList) {
-        List<DeleteHistory> deleteHistories = new ArrayList<>();
-        deleteHistories.addAll(answerList.createDeleteHistories(deleteUser));
-        deleteHistories.add(question.createDeleteHistory(deleteUser));
-
-        return deleteHistories;
     }
 }
