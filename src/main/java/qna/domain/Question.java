@@ -25,8 +25,8 @@ public class Question extends BaseEntity{
     @Column(nullable = false)
     private boolean deleted = false;
 
-    @OneToMany(mappedBy = "question")
-    private List<Answer> answerList;
+    @Embedded
+    private Answers answerList = new Answers();
 
     public Question(String title, String contents) {
         this(null, title, contents);
@@ -56,7 +56,7 @@ public class Question extends BaseEntity{
     }
 
     private boolean hasAnswers() {
-        return this.answerList != null && !this.answerList.isEmpty();
+        return this.answerList.getAnswers() == null || this.answerList.getAnswers().isEmpty();
     }
 
     public boolean isOwner(User writer) {
@@ -65,6 +65,7 @@ public class Question extends BaseEntity{
 
     public void addAnswer(Answer answer) {
         answer.toQuestion(this);
+        this.answerList.getAnswers().add(answer);
     }
 
     public Long getId() {

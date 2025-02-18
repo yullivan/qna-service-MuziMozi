@@ -1,15 +1,21 @@
 package qna.domain;
 
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.OneToMany;
 import qna.exception.CannotDeleteException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Embeddable
 public class Answers {
 
-    private final List<Answer> answers;
+    @OneToMany(mappedBy = "question")
+    private List<Answer> answers = new ArrayList<>();
+
+    public Answers() {
+    }
 
     public Answers (List<Answer> answerList) {
         this.answers = answerList;
