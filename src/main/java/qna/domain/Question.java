@@ -1,11 +1,32 @@
 package qna.domain;
 
-public class Question {
+import jakarta.persistence.*;
+import qna.exception.CannotDeleteException;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+public class Question extends BaseEntity{
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String title;
+
     private String contents;
-    private Long writerId;
+
+    @ManyToOne
+    private User writer;
+
+    @Column(nullable = false)
     private boolean deleted = false;
+
+    @Embedded
+    private Answers answerList = new Answers();
 
     public Question(String title, String contents) {
         this(null, title, contents);
@@ -18,16 +39,33 @@ public class Question {
     }
 
     public Question writeBy(User writer) {
-        this.writerId = writer.getId();
+        this.writer = writer;
         return this;
     }
 
+    public void delete() {
+
+        if (hasAnswers()) {
+            throw new CannotDeleteException("질문에 답변이 남아있습니다.");
+        }
+        this.setDeleted(true);
+    }
+
+    public DeleteHistory createDeleteHistory(User deleteUser) {
+        return new DeleteHistory(ContentType.QUESTION, this.id, deleteUser);
+    }
+
+    private boolean hasAnswers() {
+        return this.answerList.getAnswers() == null || this.answerList.getAnswers().isEmpty();
+    }
+
     public boolean isOwner(User writer) {
-        return this.writerId.equals(writer.getId());
+        return this.writer.equals(writer);
     }
 
     public void addAnswer(Answer answer) {
         answer.toQuestion(this);
+        this.answerList.getAnswers().add(answer);
     }
 
     public Long getId() {
@@ -54,12 +92,12 @@ public class Question {
         this.contents = contents;
     }
 
-    public Long getWriterId() {
-        return writerId;
+    public User getWriter() {
+        return writer;
     }
 
-    public void setWriterId(Long writerId) {
-        this.writerId = writerId;
+    public void setWriter(User writer) {
+        this.writer = writer;
     }
 
     public boolean isDeleted() {
@@ -76,7 +114,7 @@ public class Question {
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", contents='" + contents + '\'' +
-                ", writerId=" + writerId +
+                ", writer=" + writer +
                 ", deleted=" + deleted +
                 '}';
     }
